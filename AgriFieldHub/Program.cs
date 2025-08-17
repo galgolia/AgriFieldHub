@@ -1,5 +1,4 @@
 using System.Text;
-using System.Security.Cryptography; // added for password hashing
 using AgriFieldHub.Data;
 using AgriFieldHub.Repositories;
 using AgriFieldHub.Services;
@@ -72,19 +71,6 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// TEMP: Replace seeded placeholder admin password ("hashed") with a real PBKDF2 hash so you can login.
-// Login credentials after first run: admin@example.com / Admin!12345!
-using (var scope = app.Services.CreateScope())
-{
-    var ctx = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var admin = ctx.Users.FirstOrDefault(u => u.Email == "admin@example.com" && u.PasswordHash == "hashed");
-    if (admin != null)
-    {
-        admin.PasswordHash = HashPassword("Admin!12345!");
-        ctx.SaveChanges();
-    }
-}
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -104,11 +90,5 @@ app.MapControllers();
 
 app.Run();
 
-// Local helper replicating AuthController hashing approach
-static string HashPassword(string password)
-{
-    Span<byte> salt = stackalloc byte[16];
-    RandomNumberGenerator.Fill(salt);
-    var hash = Rfc2898DeriveBytes.Pbkdf2(password, salt.ToArray(), 100000, HashAlgorithmName.SHA256, 32);
-    return Convert.ToBase64String(salt) + ":" + Convert.ToBase64String(hash);
-}
+// Expose Program class for WebApplicationFactory in tests
+public partial class Program { }
