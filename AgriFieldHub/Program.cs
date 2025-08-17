@@ -2,6 +2,7 @@ using System.Text;
 using AgriFieldHub.Data;
 using AgriFieldHub.Repositories;
 using AgriFieldHub.Services;
+using AgriFieldHub.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -20,7 +21,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
-// JWT configuration (bind settings and configure authentication)
+// JWT configuration
 var jwtSection = configuration.GetSection("Jwt");
 var jwtKey = jwtSection.GetValue<string>("Key") ?? throw new InvalidOperationException("JWT Key missing");
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
@@ -70,6 +71,9 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// Ensure admin user (dev/ops) using env var ADMIN_SEED_PASSWORD
+await StartupAdminInitializer.EnsureAdminAsync(app.Services);
 
 if (app.Environment.IsDevelopment())
 {

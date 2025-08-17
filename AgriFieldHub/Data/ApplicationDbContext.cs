@@ -30,17 +30,7 @@ namespace AgriFieldHub.Data
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
-
-            // deterministic seed timestamp to avoid model diff drift
-            var seedCreatedAt = new DateTime(2025, 01, 01, 0, 0, 0, DateTimeKind.Utc);
-            modelBuilder.Entity<User>().HasData(new User
-            {
-                Id = 1,
-                Email = "admin@example.com",
-                Role = UserRole.Admin,
-                PasswordHash = "hashed", // TODO: replace with real hash
-                CreatedAt = seedCreatedAt
-            });
+            // Removed static admin seed; handled at runtime via initializer
         }
     }
 }
