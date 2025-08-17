@@ -3,6 +3,7 @@ using AgriFieldHub.Models;
 using AgriFieldHub.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Controller = AgriFieldHub.Models.Controller;
 
 namespace AgriFieldHub.Controllers;
 
