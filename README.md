@@ -10,6 +10,7 @@ ASP.NET Core 9 (Web API) backend for managing agricultural fields and their cont
 - PBKDF2 password hashing (salt:hash format)
 - Ownership enforcement: users access only their own Fields & Controllers (Admins see all)
 - Swagger (dev) with JWT Authorize support
+- Basic integration tests (xUnit + WebApplicationFactory)
 
 ## Getting Started
 ### Prerequisites
@@ -54,6 +55,17 @@ Swagger UI (Development): https://localhost:<port>/swagger
 - Non-admin users see only their own Fields and Controllers.
 - Admins (Role=Admin) can see and manage all resources.
 
+## Tests
+Integration tests project: `AgriFieldHub.Tests`
+Run tests:
+```
+dotnet test
+```
+Coverage (optional):
+```
+dotnet test /p:CollectCoverage=true
+```
+
 ## Project Structure
 - Controllers/: API endpoints
 - Data/: EF Core DbContext
@@ -61,21 +73,16 @@ Swagger UI (Development): https://localhost:<port>/swagger
 - Repositories/: Generic + specific repositories & UnitOfWork
 - DTOs/: Transport objects for requests/responses
 - Services/: JWT token generation
+- AgriFieldHub.Tests/: integration tests
 
 ## Improvements / TODO
-- Central authorization policy (OwnerOrAdmin) instead of inline checks
-- Input validation enhancements (e.g., FluentValidation)
-- Better password hashing / ASP.NET Identity integration
-- Integration & unit tests (optional requirement)
-- Pagination & filtering for list endpoints
+- Central authorization policy (OwnerOrAdmin)
+- Input validation (FluentValidation)
+- Better password hashing / ASP.NET Identity
+- More tests (controller CRUD, negative cases, admin access)
+- Pagination & filtering
 - CI workflow (GitHub Actions)
-- Secret management via environment variables / Azure Key Vault
-
-## Testing (future)
-Add xUnit project and write tests for:
-- Auth register/login
-- Field CRUD authorization
-- Controller CRUD & field ownership
+- Secret management (env vars / Key Vault)
 
 ## License
 Add a LICENSE file if you intend to open source.
