@@ -21,6 +21,9 @@ public class CreateDeviceControllerRequest
     public string? Description { get; set; }
 
     public string? Status { get; set; }
+
+    [Required]
+    public int FieldId { get; set; }
 }
 
 public class UpdateDeviceControllerRequest : CreateDeviceControllerRequest { }

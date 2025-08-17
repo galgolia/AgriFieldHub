@@ -15,21 +15,17 @@ public class FieldsController : ControllerBase
     private readonly IUnitOfWork _uow;
     public FieldsController(IUnitOfWork uow) => _uow = uow;
 
-    private int? CurrentUserId => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(ClaimTypes.Name) ?? User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
+    private int? CurrentUserId => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
+    private bool IsAdmin => User.IsInRole(UserRole.Admin.ToString());
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<FieldDto>>> GetAll(CancellationToken ct)
     {
-        var fields = await _uow.Fields.GetAllAsync(ct);
-        return Ok(fields.Select(f => new FieldDto
-        {
-            Id = f.Id,
-            Name = f.Name,
-            Description = f.Description,
-            Location = f.Location,
-            UserId = f.UserId,
-            CreatedAt = f.CreatedAt
-        }));
+        var userId = CurrentUserId;
+        var fields = IsAdmin
+            ? await _uow.Fields.GetAllAsync(ct)
+            : await _uow.Fields.FindAsync(f => f.UserId == userId, ct);
+        return Ok(fields.Select(ToDto));
     }
 
     [HttpGet("{id:int}")]
@@ -37,15 +33,8 @@ public class FieldsController : ControllerBase
     {
         var field = await _uow.Fields.GetByIdAsync(id, ct);
         if (field == null) return NotFound();
-        return Ok(new FieldDto
-        {
-            Id = field.Id,
-            Name = field.Name,
-            Description = field.Description,
-            Location = field.Location,
-            UserId = field.UserId,
-            CreatedAt = field.CreatedAt
-        });
+        if (!IsAdmin && field.UserId != CurrentUserId) return Forbid();
+        return Ok(ToDto(field));
     }
 
     [HttpPost]
@@ -63,8 +52,7 @@ public class FieldsController : ControllerBase
         };
         await _uow.Fields.AddAsync(field, ct);
         await _uow.SaveChangesAsync();
-        var dto = new FieldDto { Id = field.Id, Name = field.Name, Description = field.Description, Location = field.Location, UserId = field.UserId, CreatedAt = field.CreatedAt };
-        return CreatedAtAction(nameof(Get), new { id = field.Id }, dto);
+        return CreatedAtAction(nameof(Get), new { id = field.Id }, ToDto(field));
     }
 
     [HttpPut("{id:int}")]
@@ -72,6 +60,7 @@ public class FieldsController : ControllerBase
     {
         var field = await _uow.Fields.GetByIdAsync(id, ct);
         if (field == null) return NotFound();
+        if (!IsAdmin && field.UserId != CurrentUserId) return Forbid();
         field.Name = request.Name;
         field.Description = request.Description ?? string.Empty;
         field.Location = request.Location ?? string.Empty;
@@ -85,8 +74,19 @@ public class FieldsController : ControllerBase
     {
         var field = await _uow.Fields.GetByIdAsync(id, ct);
         if (field == null) return NotFound();
+        if (!IsAdmin && field.UserId != CurrentUserId) return Forbid();
         await _uow.Fields.DeleteAsync(field);
         await _uow.SaveChangesAsync();
         return NoContent();
     }
+
+    private static FieldDto ToDto(Field f) => new()
+    {
+        Id = f.Id,
+        Name = f.Name,
+        Description = f.Description,
+        Location = f.Location,
+        UserId = f.UserId,
+        CreatedAt = f.CreatedAt
+    };
 }
