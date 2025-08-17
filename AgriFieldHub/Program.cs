@@ -1,6 +1,7 @@
 using System.Text;
 using AgriFieldHub.Data;
 using AgriFieldHub.Repositories;
+using AgriFieldHub.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -16,6 +17,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Register repositories / Unit of Work
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
 // JWT configuration (bind settings and configure authentication)
 var jwtSection = configuration.GetSection("Jwt");
