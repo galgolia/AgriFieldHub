@@ -38,7 +38,7 @@ namespace AgriFieldHub.Data
                 Id = 1,
                 Email = "admin@example.com",
                 Role = UserRole.Admin,
-                PasswordHash = "hashed", // TODO: replace with real hash
+                PasswordHash = "6Rzv+fSN977mCnuh1DhuFA==:27TDgSm7RICoyU4fqcQ++LlhabUs4Tvk9YQriGiGTJM=", 
                 CreatedAt = seedCreatedAt
             });
         }
