@@ -18,27 +18,27 @@ ASP.NET Core 9 (Web API) backend for managing agricultural fields and their cont
 - SQL Server (local or container)
 
 ### Configuration
-Edit `appsettings.json` (or override with environment variables / user secrets):
+Edit `appsettings.json` or preferably override with environment variables / user secrets.
+Example (PowerShell):
 ```
-ConnectionStrings:DefaultConnection=Server=localhost;Database=AgriFieldHubDb;Trusted_Connection=True;TrustServerCertificate=True;
-Jwt:Key=<32+ byte secret>
-Jwt:Issuer=AgriFieldHub
-Jwt:Audience=AgriFieldHubUsers
-Jwt:ExpiryMinutes=60
+$env:ConnectionStrings__DefaultConnection="Server=localhost;Database=AgriFieldHubDb;Trusted_Connection=True;TrustServerCertificate=True;"
+$env:Jwt__Key="<your 32+ byte secret>"
+$env:Jwt__Issuer="AgriFieldHub"
+$env:Jwt__Audience="AgriFieldHubUsers"
 ```
-IMPORTANT: Do not commit real secrets. Move `Jwt:Key` to environment variable before production.
+The committed key in appsettings.json is a placeholder ONLY.
 
 ### Database
 Apply migrations:
 ```
 dotnet ef database update --project AgriFieldHub/AgriFieldHub.csproj --startup-project AgriFieldHub/AgriFieldHub.csproj
 ```
-The initial admin user is seeded:
+Seeded admin user (demo/testing):
 ```
 Email: admin@example.com
-Password: (seeded hash corresponds to internal test password; change immediately)
+Password: (hash placeholder, rotate after deployment)
 ```
-To change admin password run an UPDATE on Users or replace the seed and add a migration.
+To change admin password: UPDATE Users set PasswordHash=... or modify seed + add migration.
 
 ### Run
 ```
@@ -48,41 +48,59 @@ Swagger UI (Development): https://localhost:<port>/swagger
 
 ### Auth Flow
 1. Register: POST /api/auth/register { email, password }
-2. Login: POST /api/auth/login -> returns JWT
-3. Use JWT in Authorization: Bearer <token>
+2. Login: POST /api/auth/login -> JWT
+3. Use JWT: Authorization: Bearer <token>
 
 ### Ownership Rules
-- Non-admin users see only their own Fields and Controllers.
-- Admins (Role=Admin) can see and manage all resources.
+- Non-admin: only own Fields & Controllers
+- Admin: full visibility & management
+
+## Sample cURL
+Register:
+```
+curl -X POST https://localhost:7218/api/auth/register -H "Content-Type: application/json" -d '{"email":"u1@example.com","password":"Passw0rd!"}'
+```
+Login:
+```
+curl -X POST https://localhost:7218/api/auth/login -H "Content-Type: application/json" -d '{"email":"u1@example.com","password":"Passw0rd!"}'
+```
+List Fields:
+```
+curl -H "Authorization: Bearer <TOKEN>" https://localhost:7218/api/fields
+```
+Create Field:
+```
+curl -X POST https://localhost:7218/api/fields -H "Authorization: Bearer <TOKEN>" -H "Content-Type: application/json" -d '{"name":"My Field","description":"Demo"}'
+```
 
 ## Tests
-Integration tests project: `AgriFieldHub.Tests`
-Run tests:
+Run integration tests:
 ```
 dotnet test
 ```
-Coverage (optional):
+Add coverage:
 ```
 dotnet test /p:CollectCoverage=true
 ```
 
 ## Project Structure
-- Controllers/: API endpoints
-- Data/: EF Core DbContext
-- Models/: Entity classes
-- Repositories/: Generic + specific repositories & UnitOfWork
-- DTOs/: Transport objects for requests/responses
-- Services/: JWT token generation
-- AgriFieldHub.Tests/: integration tests
+- Controllers/ (Auth, Users, Fields, Controllers)
+- Data/ (DbContext)
+- Models/ (Entities)
+- Repositories/ (Generic + specialty + UoW)
+- DTOs/ (Contracts)
+- Services/ (JWT)
+- Migrations/
+- AgriFieldHub.Tests/ (Integration tests)
 
 ## Improvements / TODO
-- Central authorization policy (OwnerOrAdmin)
-- Input validation (FluentValidation)
-- Better password hashing / ASP.NET Identity
-- More tests (controller CRUD, negative cases, admin access)
+- Authorization policy handler (OwnerOrAdmin)
+- Global exception / ProblemDetails middleware
+- FluentValidation for DTOs
 - Pagination & filtering
 - CI workflow (GitHub Actions)
-- Secret management (env vars / Key Vault)
+- Stronger password hashing provider (Identity / bcrypt / Argon2)
+- Refresh tokens & key rotation
 
 ## License
-Add a LICENSE file if you intend to open source.
+Add a LICENSE file if open sourcing.
